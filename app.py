@@ -2,7 +2,8 @@ import streamlit as st
 import os
 import time
 
-# IMPORTANT: no uninstall hack needed anymore
+# 🔥 Important fix (prevents some OpenCV issues)
+os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
 
 import cv2
 import numpy as np
@@ -20,7 +21,7 @@ from googleapiclient.discovery import build
 
 from PIL import Image
 
-# safe import (cloud-safe)
+# cloud-safe import
 try:
     import pyautogui
 except:
