@@ -56,7 +56,7 @@ if "emotion_data" not in st.session_state:
 
 # Firebase Initialization
 if not firebase_admin._apps:
-    cred = credentials.Certificate(st.secrets["firebase"])
+    cred = credentials.Certificate(dict(st.secrets["firebase"]))
     firebase_admin.initialize_app(cred)
 
 db = firestore.client()
@@ -68,14 +68,13 @@ co = cohere.Client(COHERE_API_KEY)
 
 
 # Google Sheets Integration
-# Google Sheets Integration
 def setup_google_sheets_api():
-    credentials = service_account.Credentials.from_service_account_info(
-        st.secrets["google_sheets"],
+    creds = service_account.Credentials.from_service_account_info(
+        dict(st.secrets["google_sheets"]),
         scopes=['https://www.googleapis.com/auth/spreadsheets.readonly']
     )
 
-    service = build('sheets', 'v4', credentials=credentials)
+    service = build('sheets', 'v4', credentials=creds)
     return service
     
 def fetch_sheet_data(service, spreadsheet_id):
