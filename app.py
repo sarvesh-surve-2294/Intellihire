@@ -1,9 +1,19 @@
-import streamlit as st
 import os
+import sys
+import shutil
 
-# ✅ FINAL FIX for libGL error
-os.environ["DISPLAY"] = ""
+# 🔥 REMOVE wrong OpenCV installed by deepface
+for path in sys.path:
+    if "site-packages" in path:
+        cv2_path = os.path.join(path, "cv2")
+        if os.path.exists(cv2_path):
+            try:
+                shutil.rmtree(cv2_path)
+            except:
+                pass
 
+# ✅ now safe imports
+import streamlit as st
 import time
 import cv2
 import numpy as np
@@ -21,7 +31,7 @@ from googleapiclient.discovery import build
 
 from PIL import Image
 
-# safe import for cloud
+# safe for cloud
 try:
     import pyautogui
 except:
