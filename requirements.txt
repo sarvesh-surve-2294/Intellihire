@@ -16,7 +16,7 @@ cohere==5.13.12
 colorama==0.4.6
 cryptography==44.0.2
 
-# 🔥 IMPORTANT ORDER (fix)
+# 🔥 CRITICAL
 deepface==0.0.93
 opencv-python-headless==4.11.0.86
 
