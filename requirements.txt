@@ -1,3 +1,5 @@
+# rebuild trigger
+
 absl-py==2.1.0
 altair==5.5.0
 annotated-types==0.7.0
@@ -70,7 +72,10 @@ namex==0.0.8
 narwhals==1.31.0
 numpy==1.26.4
 oauthlib==3.2.2
+
+# 🔥 FORCE HEADLESS OPENCV (CRITICAL)
 opencv-python-headless==4.11.0.86
+
 opt_einsum==3.4.0
 optree==0.14.1
 packaging==24.2
@@ -109,9 +114,12 @@ streamlit==1.42.0
 tenacity==9.0.0
 tensorboard==2.19.0
 tensorboard-data-server==0.7.2
+
+# ✅ ONLY THIS (NO tensorflow_intel)
 tensorflow==2.19.0
 tensorflow-estimator==2.14.0
 tensorflow-io-gcs-filesystem==0.31.0
+
 termcolor==2.5.0
 tf_keras==2.19.0
 tokenizers==0.21.1
