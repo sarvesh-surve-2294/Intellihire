@@ -1,8 +1,8 @@
 import streamlit as st
 import os
 
-# 🔥 must be before cv2
-os.system("pip uninstall -y opencv-python")
+# ✅ FINAL FIX for libGL error
+os.environ["DISPLAY"] = ""
 
 import time
 import cv2
@@ -21,6 +21,7 @@ from googleapiclient.discovery import build
 
 from PIL import Image
 
+# safe import for cloud
 try:
     import pyautogui
 except:
