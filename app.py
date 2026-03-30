@@ -36,7 +36,9 @@ if "emotion_data" not in st.session_state:
 # Firebase Initialization
 if not firebase_admin._apps:
     cred = credentials.Certificate(
-        r"D:\\CWH.py\\codewHari.py\\assessai-44afc-firebase-adminsdk-fbsvc-4e13d0986d.json"
+        # r"C:\Users\aadik\OneDrive\Documents\Desktop\finalhari.py\codewHari.py\assessai-44afc-firebase-adminsdk-fbsvc-4e13d0986d.json"
+        # r"D:\\all_caps.py\\codewHari.py\\assessai-44afc-firebase-adminsdk-fbsvc-4e13d0986d.json"
+          r"D:\\Downloads\\mock-20306-firebase-adminsdk-fbsvc-9630b6dc72.json"
     )  # Replace with your Firebase credentials path
     firebase_admin.initialize_app(cred)
 db = firestore.client()
@@ -51,7 +53,9 @@ co = cohere.Client(COHERE_API_KEY)
 def setup_google_sheets_api():
     # Set up Google Sheets API connection using service account
     credentials = service_account.Credentials.from_service_account_file(
-        r"D:\\CWH.py\\codewHari.py\\moonlit-haven-452014-i4-248bff09d735.json",  # Replace with your file path
+        # r"C:\Users\aadik\OneDrive\Documents\Desktop\finalhari.py\codewHari.py\moonlit-haven-452014-i4-248bff09d735.json",
+        # # Replace with your file path
+        "D:\\Downloads\\ai-interview-471017-9976a9332bc8.json",
         scopes=['https://www.googleapis.com/auth/spreadsheets.readonly']
     )
     service = build('sheets', 'v4', credentials=credentials)
@@ -256,9 +260,82 @@ def capture_and_analyze_stress():
     screenshot = pyautogui.screenshot()
     screenshot = np.array(screenshot)
     screenshot_rgb = cv2.cvtColor(screenshot, cv2.COLOR_BGR2RGB)
-
-    # Analyze the image
-    analysis, processed_image = detect_stress(screenshot_rgb)
+    
+    # Convert to grayscale for processing
+    gray = cv2.cvtColor(screenshot_rgb, cv2.COLOR_RGB2GRAY)
+    
+    # Apply blur to reduce noise
+    blurred = cv2.GaussianBlur(gray, (5, 5), 0)
+    
+    # Edge detection with lower threshold to capture more potential frames
+    edges = cv2.Canny(blurred, 30, 100)
+    
+    # Dilate edges to connect nearby edges
+    kernel = np.ones((3, 3), np.uint8)
+    dilated = cv2.dilate(edges, kernel, iterations=1)
+    
+    # Find contours
+    contours, _ = cv2.findContours(dilated, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+    
+    # Look for rectangular shapes that are likely to be the video frame
+    video_frame = None
+    max_area = 0
+    min_area_threshold = 50000  # Minimum area to be considered a video frame
+    target_aspect_ratio = 16/9  # Common aspect ratio for video
+    
+    for cnt in contours:
+        # Approximate the contour to reduce the number of points
+        epsilon = 0.02 * cv2.arcLength(cnt, True)
+        approx = cv2.approxPolyDP(cnt, epsilon, True)
+        
+        # Check if it's a rectangle (4 points)
+        if len(approx) == 4:
+            x, y, w, h = cv2.boundingRect(approx)
+            area = w * h
+            aspect_ratio = w / h if h > 0 else 0
+            
+            # Check if it's large enough and has a reasonable aspect ratio
+            if (area > min_area_threshold and 
+                area > max_area and 
+                abs(aspect_ratio - target_aspect_ratio) < 0.5):  # Allow some deviation from perfect aspect ratio
+                max_area = area
+                video_frame = (x, y, w, h)
+    
+    # Crop the video frame if detected
+    if video_frame:
+        x, y, w, h = video_frame
+        # Add a small margin (5%) to ensure we don't cut off any faces
+        margin_x = int(w * 0.05)
+        margin_y = int(h * 0.05)
+        
+        # Ensure margins don't go out of bounds
+        x_start = max(0, x - margin_x)
+        y_start = max(0, y - margin_y)
+        x_end = min(screenshot_rgb.shape[1], x + w + margin_x)
+        y_end = min(screenshot_rgb.shape[0], y + h + margin_y)
+        
+        # Crop the frame with margins
+        cropped_frame = screenshot_rgb[y_start:y_end, x_start:x_end]
+        
+        # Analyze the cropped frame
+        analysis, processed_image = detect_stress(cropped_frame)
+    else:
+        # If Digital Samba frame not detected, use a fallback method
+        # Look for video frame area (dark background with lighter content in the center)
+        st.warning("Video conference frame not detected using primary method, trying alternate approach...")
+        
+        # Try to crop the center portion of the screen where Digital Samba usually displays the video
+        h, w = screenshot_rgb.shape[:2]
+        center_x, center_y = w // 2, h // 2
+        crop_w, crop_h = int(w * 0.6), int(h * 0.6)  # Take 60% of screen
+        
+        x1 = center_x - crop_w // 2
+        y1 = center_y - crop_h // 2
+        x2 = x1 + crop_w
+        y2 = y1 + crop_h
+        
+        fallback_crop = screenshot_rgb[y1:y2, x1:x2]
+        analysis, processed_image = detect_stress(fallback_crop)
     
     # Save the image with the analysis
     if processed_image is not None:
@@ -271,16 +348,47 @@ def capture_and_analyze_stress():
 def generate_interview_questions(profile):
     if not profile:
         return ["Please select a candidate profile first."]
-    prompt = f"Generate five interview questions for a candidate applying as {profile.get('role', 'N/A')} with {profile.get('experience', 'N/A')} years of experience and skills in {profile.get('skills', 'N/A')}."
-    response = co.generate(
-        model="command",
-        prompt=prompt,
-        max_tokens=150,
-        temperature=0.7
+    
+    # Very explicit prompt to force 5 questions
+    messages = [
+        {"role": "system", "content": "You are an AI that generates exactly five interview questions."},
+        {"role": "user", "content": (
+            f"Generate exactly five distinct interview questions (no explanations) for a candidate applying as "
+            f"{profile.get('role', 'N/A')} with {profile.get('experience', 'N/A')} years of experience "
+            f"and skills in {profile.get('skills', 'N/A')}. "
+            f"Number them 1 to 5. Only output the questions, nothing else."
+        )}
+    ]
+
+    # Call the Cohere Chat API
+    response = co.v2.chat(
+        model="command-xlarge-nightly",
+        messages=messages
     )
-    questions = response.generations[0].text.strip().split("\n")
-    questions = [q.strip() for q in questions if q.strip()]
+    
+    # Get the text
+    questions_text = response.message.content[0].text
+
+    # Split lines, remove numbering, and keep only non-empty questions
+    questions = []
+    for line in questions_text.split("\n"):
+        line = line.strip()
+        if not line:
+            continue
+        # Remove numbering like "1. " or "1) "
+        if line[0].isdigit() and (line[1] == '.' or line[1] == ')'):
+            line = line[2:].strip()
+        # Keep lines that end with '?' or look like a question
+        if line.endswith('?') or len(line.split()) > 3:  # basic fallback
+            questions.append(line)
+
+    # If model still returns fewer than 5, retry once
+    if len(questions) < 5:
+        return generate_interview_questions(profile)
+
     return questions[:5]
+
+
 
 # Navigation functions
 def navigate_to_main():
@@ -302,7 +410,7 @@ st.sidebar.header("Candidate Profiles from Google Sheets")
 # Google Sheets URL input
 sheet_url = st.sidebar.text_input(
     "Google Sheets URL", 
-    value="https://docs.google.com/spreadsheets/d/1ePTP7QhzLZvf5YJI2qTX78wOeSupfmagBzOZ_MvpywQ/edit?usp=sharing",
+    value="https://docs.google.com/spreadsheets/d/1EIljLYJauOmZJO0Stu3OVzcBW2N474cDup-nU2TfXpw/edit?gid=0#gid=0",
     help="URL of the Google Sheet containing candidate information"
 )
 
@@ -317,6 +425,7 @@ if st.sidebar.button("Sync Candidate Profiles"):
                     st.sidebar.error("Invalid Google Sheets URL. Please check and try again.")
                 else:
                     service = setup_google_sheets_api()
+                     
                     candidates = fetch_sheet_data(service, spreadsheet_id)
                     
                     if candidates:
@@ -363,7 +472,7 @@ else:
 
 # Main Page Content
 if st.session_state["page"] == "main":
-    st.title("Recruiter Dashboard - AI Interview Assistant")
+    st.title("Intellihire: Intelligent Hiring & Interview Analysis")
     
     # AI Interview Chatbot
     st.subheader("AI Interview Chatbot")
@@ -652,7 +761,7 @@ elif st.session_state["page"] == "analysis":
             st.markdown("---")
             
             # Notes and analysis section with proper error handling
-            st.subheader("Recruiter Notes")
+            st.subheader("Expert Notes")
             
             # Load any existing notes
             if "current_profile" in st.session_state:
@@ -662,7 +771,7 @@ elif st.session_state["page"] == "analysis":
                     doc = doc_ref.get()
                     existing_notes = doc.to_dict().get('text', '') if doc.exists else ''
                     
-                    # Allow recruiters to add notes at this timestamp
+                    # Allow experts to add notes at this timestamp
                     notes = st.text_area("Add notes about this moment:", value=existing_notes, height=150)
                     
                     if st.button("Save Notes"):
