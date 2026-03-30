@@ -1,23 +1,26 @@
 import streamlit as st
-
-# 🔥 CRITICAL FIX (must be before cv2)
 import os
-os.system("pip uninstall -y opencv-python")
-
 import time
+
+# IMPORTANT: no uninstall hack needed anymore
+
 import cv2
 import numpy as np
 from deepface import DeepFace
+
 import firebase_admin
 from firebase_admin import credentials, firestore
+
 import cohere
 import base64
 import pandas as pd
+
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
+
 from PIL import Image
 
-# optional safe import (recommended)
+# safe import (cloud-safe)
 try:
     import pyautogui
 except:
