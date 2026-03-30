@@ -17,7 +17,7 @@ colorama==0.4.6
 cryptography==44.0.2
 
 deepface==0.0.93
-opencv-python-headless==4.11.0.86   # 🔥 keep AFTER deepface
+opencv-python-headless==4.11.0.86
 
 fastavro==1.10.0
 filelock==3.18.0
