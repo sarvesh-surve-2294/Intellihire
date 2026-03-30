@@ -1,10 +1,10 @@
 import streamlit as st
 import os
+
+# 🔥 must be before cv2
+os.system("pip uninstall -y opencv-python")
+
 import time
-
-# 🔥 Important fix (prevents some OpenCV issues)
-os.environ["OPENCV_IO_ENABLE_OPENEXR"] = "1"
-
 import cv2
 import numpy as np
 from deepface import DeepFace
@@ -21,7 +21,6 @@ from googleapiclient.discovery import build
 
 from PIL import Image
 
-# cloud-safe import
 try:
     import pyautogui
 except:
