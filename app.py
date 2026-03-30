@@ -1,5 +1,9 @@
 import streamlit as st
+
+# 🔥 CRITICAL FIX (must be before cv2)
 import os
+os.system("pip uninstall -y opencv-python")
+
 import time
 import cv2
 import numpy as np
@@ -12,12 +16,17 @@ import pandas as pd
 from google.oauth2 import service_account
 from googleapiclient.discovery import build
 from PIL import Image
-import pyautogui
+
+# optional safe import (recommended)
+try:
+    import pyautogui
+except:
+    pyautogui = None
+
 from datetime import datetime
 import plotly.graph_objects as go
 import plotly.express as px
 import pytz
-
 
 os.environ["TF_ENABLE_ONEDNN_OPTS"] = "0"
 
