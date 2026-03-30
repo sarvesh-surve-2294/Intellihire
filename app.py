@@ -35,12 +35,9 @@ if "emotion_data" not in st.session_state:
 
 # Firebase Initialization
 if not firebase_admin._apps:
-    cred = credentials.Certificate(
-        # r"C:\Users\aadik\OneDrive\Documents\Desktop\finalhari.py\codewHari.py\assessai-44afc-firebase-adminsdk-fbsvc-4e13d0986d.json"
-        # r"D:\\all_caps.py\\codewHari.py\\assessai-44afc-firebase-adminsdk-fbsvc-4e13d0986d.json"
-          r"D:\\Downloads\\mock-20306-firebase-adminsdk-fbsvc-9630b6dc72.json"
-    )  # Replace with your Firebase credentials path
+    cred = credentials.Certificate(st.secrets["firebase"])
     firebase_admin.initialize_app(cred)
+
 db = firestore.client()
 
 
@@ -50,17 +47,16 @@ co = cohere.Client(COHERE_API_KEY)
 
 
 # Google Sheets Integration
+# Google Sheets Integration
 def setup_google_sheets_api():
-    # Set up Google Sheets API connection using service account
-    credentials = service_account.Credentials.from_service_account_file(
-        # r"C:\Users\aadik\OneDrive\Documents\Desktop\finalhari.py\codewHari.py\moonlit-haven-452014-i4-248bff09d735.json",
-        # # Replace with your file path
-        "D:\\Downloads\\ai-interview-471017-9976a9332bc8.json",
+    credentials = service_account.Credentials.from_service_account_info(
+        st.secrets["google_sheets"],
         scopes=['https://www.googleapis.com/auth/spreadsheets.readonly']
     )
+
     service = build('sheets', 'v4', credentials=credentials)
     return service
-
+    
 def fetch_sheet_data(service, spreadsheet_id):
     """Fetch data from Google Sheets"""
     try:
