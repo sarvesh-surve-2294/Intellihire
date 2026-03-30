@@ -73,7 +73,7 @@ narwhals==1.31.0
 numpy==1.26.4
 oauthlib==3.2.2
 
-# 🔥 FORCE HEADLESS OPENCV (CRITICAL)
+# 🔥 CRITICAL (ONLY THIS, NO opencv-python)
 opencv-python-headless==4.11.0.86
 
 opt_einsum==3.4.0
