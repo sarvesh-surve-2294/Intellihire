@@ -1,21 +1,19 @@
-import os
 import sys
-import shutil
+import importlib
+import os
 
-# 🔥 REMOVE wrong OpenCV installed by deepface
-for path in sys.path:
-    if "site-packages" in path:
-        cv2_path = os.path.join(path, "cv2")
-        if os.path.exists(cv2_path):
-            try:
-                shutil.rmtree(cv2_path)
-            except:
-                pass
+# 🔥 FORCE correct OpenCV binding (FINAL FIX)
+if "cv2" in sys.modules:
+    del sys.modules["cv2"]
 
-# ✅ now safe imports
+os.environ["OPENCV_VIDEOIO_PRIORITY_MSMF"] = "0"
+
+# now import safely
+import cv2
+
+# rest imports
 import streamlit as st
 import time
-import cv2
 import numpy as np
 from deepface import DeepFace
 
@@ -31,7 +29,7 @@ from googleapiclient.discovery import build
 
 from PIL import Image
 
-# safe for cloud
+# safe import for cloud
 try:
     import pyautogui
 except:
